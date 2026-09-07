@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://code.jquery.com/jquery-4.0.0.js"></script>
+    <title>Wielka Planeta 2.0</title>
+
+</head>
+
+<body>
+    <h1 id="wznowGre" style="position: absolute;top: 189px;left: 381px;font-size: 75px;">WZNÓW GRĘ</h1>
+    <canvas id="canvas" width="1250" height="600"></canvas>
+    <script>
+        const STARTTIME = Date.now();
+        const CANVAS = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const SZER = canvas.width;
+        const WYS = canvas.height;
+        const CENTERX = canvas.width / 2;
+        const CENTERY = canvas.height / 2;
+        const LEWA = 37;
+        const GORA = 38;
+        const PRAWA = 39;
+        const DOL = 40;
+        const ESC = 27;
+        let reqId;
+        let pauza = false;
+        $("#wznowGre").hide();
+
+        let Planeta = function (x, y, promien) {
+            this.x = x;
+            this.y = y;
+            this.promien = promien
+        };
+
+        Planeta.prototype.przesuwaj = function (kierunek) {
+            if (kierunek[GORA] && !(this.y < this.promien + 10)) {
+                this.y -= 10
+            }
+            if (kierunek[DOL] && !(this.y > WYS - this.promien - 10)) {
+                this.y += 10
+            }
+            if (kierunek[LEWA] && !(this.x < this.promien + 10)) {
+                this.x -= 10
+            }
+            if (kierunek[PRAWA] && !(this.x > SZER - this.promien - 10)) {
+                this.x += 10
+            };
+        };
+
+        Planeta.prototype.rysuj = function () {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.promien, 0, Math.PI * 2);
+            ctx.fill();
+        };
+
+        let tekst = function (tekst, x, y, rozmiar) {
+            ctx.fillStyle = "black";
+            ctx.textAlign = "center"
+            ctx.font = `${rozmiar}px degolan`;
+            ctx.fillText(tekst, x, y);
+        };
+
+        let gracz = new Planeta(100, 100, 50);
+
+        let map = { 37: false, 38: false, 39: false, 40: false };
+        $(document).keydown(function (zdarzenie) {
+            if (zdarzenie.keyCode in map) {
+                map[zdarzenie.keyCode] = true;
+                gracz.przesuwaj(map);
+            };
+        }).keyup(function (zdarzenie) {
+            if (zdarzenie.keyCode in map) {
+                map[zdarzenie.keyCode] = false;
+            }
+        });
+
+        $(document).keydown(function (zdarzenie) {
+            if (zdarzenie.keyCode === ESC) {
+                pauza = true;
+            }
+        });
+
+        let gra = function (lastTime) {
+            let time = Date.now();
+            let timeDiff = time - lastTime;
+            ctx.clearRect(0, 0, SZER, WYS);
+            ctx.fillStyle = "magenta";
+            gracz.rysuj();
+            ctx.strokeRect(0, 0, SZER, WYS);
+
+            if (pauza === false) {
+                reqId = window.requestAnimationFrame(function () {
+                    gra(time);
+                })
+            } else if (pauza === true) {
+                tekst("PAUZA", CENTERX, CENTERY - 150, 100);
+                $("#wznowGre").show();
+                $("#wznowGre").click(function () {
+                    pauza = false;
+                    gra(time);
+                    $("#wznowGre").hide();
+                 });
+            };
+        };
+
+        gra(STARTTIME);
+    </script>
+</body>
+
+</html>
