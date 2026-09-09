@@ -1,12 +1,12 @@
 - plany:
 - [X] poruszanie
-- [X]menu
-- [X]włożyć kod na githuba
+- [X] menu
+- [X] włożyć kod na githuba
 - [X] zrobić porządek na githubie
 - [X] tło
 - [X] dodać timediffa do poruszania
-- [] kolizje(wip)
-- [] podzielenie gry na osobne pliki
-- [] tekstury
-- [] planety, księzyce itd.
-- [] mapa większa od ekranu
+- [ ] kolizje(wip)
+- [ ] podzielenie gry na osobne pliki
+- [ ] tekstury
+- [ ] planety, księzyce itd.
+- [ ] mapa większa od ekranu
