@@ -1,4 +1,4 @@
-- plany:
+# PLANY:
 - [X] poruszanie
 - [X] menu
 - [X] włożyć kod na githuba
