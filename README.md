@@ -5,8 +5,12 @@
 - [X] zrobić porządek na githubie
 - [X] tło
 - [X] dodać timediffa do poruszania
-- [ ] kolizje(wip)
+- [x] planety 
+- [x] dodać napis "placeholder" na planecie
+- [ ] kolizje (żeby konsola coś pisała) (wip)
+- [ ] naprawić menu pauzy (wip)
 - [ ] podzielenie gry na osobne pliki
 - [ ] tekstury
-- [ ] planety, księzyce itd.
+- [ ] księzyce itd. (wip)
+- [ ] księżyce dookoła planet
 - [ ] mapa większa od ekranu

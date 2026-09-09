@@ -46,36 +46,78 @@
         const PRAWA = 39;
         const DOL = 40;
         const ESC = 27;
-        const ILERAZY = 100;
+        const LICZBAGWIAZDEK = 150;
+        const LICZBAPLANET = 11;//bo z graczem
         let reqId;
         let pauza = false;
-        let gwiazdki = [];
         let kierunek = 0;
+        let gwiazdki = [];
+        let planety = [];
+
+
 
         $("#wznowGre").hide();
 
-        for (let i = 0; i <= ILERAZY; i++) {
+        for (let i = 0; i <= LICZBAGWIAZDEK; i++) {
             gwiazdki.push({
                 x: Math.floor(Math.random() * SZER),
                 y: Math.floor(Math.random() * WYS),
-                z: Math.floor(Math.random() * 10)
+                z: Math.random() * 0.1
             });
         };
 
-        let rysujNiebo = function (x, y) {
+        let rysujNiebo = function () {
             gwiazdki.forEach(gwiazdka => {
                 ctx.beginPath();
                 ctx.fillStyle = "white";
-                ctx.arc(gwiazdka.x + x, gwiazdka.y + y, 3, 0, 2 * Math.PI);
+                ctx.arc(gwiazdka.x + gracz.x * gwiazdka.z, gwiazdka.y + gracz.y * gwiazdka.z, 45 * gwiazdka.z, 0, 2 * Math.PI);
                 ctx.fill();
             });
+        };
+
+        let tekst = function (tekst, x, y, rozmiar, kolor) {
+            ctx.fillStyle = kolor;
+            ctx.textAlign = "center"
+            ctx.font = `${rozmiar}px degolan`;
+            ctx.fillText(tekst, x, y);
         };
 
         let Planeta = function (x, y, promien) {
             this.x = x;
             this.y = y;
             this.promien = promien
-            this.PREDKOSC = 0.3
+            this.PREDKOSC = 0.25
+        };
+
+        let gracz = new Planeta(100, 100, 50);
+        planety.push(gracz);
+        while (planety.length < LICZBAPLANET) {
+            let nowyPromien = Math.floor(Math.random() * 70) + 40;
+            let nowyX = Math.floor(Math.random() * SZER - nowyPromien);
+            let nowyY = Math.floor(Math.random() * WYS - nowyPromien);
+            let kolizja = false;
+            if (nowyX < nowyPromien) {
+                nowyX += nowyPromien
+            }
+            if (Math.abs(50 - nowyX) < nowyPromien + 50) {
+                nowyX += nowyPromien
+            }
+            if (nowyY < nowyPromien) {
+                nowyY += nowyPromien
+            }
+            if (Math.abs(50 - nowyY) < nowyPromien + 50) {
+                nowyY += nowyPromien
+            }
+            planety.forEach(element => {
+                if (Math.abs(element.x - nowyX) < element.promien + nowyPromien &&
+                    Math.abs(element.y - nowyY) < element.promien + nowyPromien) {
+                    kolizja = true
+                }
+            });
+            if (!kolizja) {
+                planety.push(new Planeta(nowyX, nowyY, nowyPromien));
+            }
+
         };
 
         Planeta.prototype.przesuwaj = function (kierunek, timeDiff) {
@@ -93,20 +135,17 @@
             };
         };
 
-        Planeta.prototype.rysuj = function () {
+        Planeta.prototype.rysuj = function (numerPlanety) {
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.promien, 0, Math.PI * 2);
+            ctx.fillStyle = "magenta"; //placeholder
             ctx.fill();
+            if (numerPlanety === 0) {
+                tekst("PLACEHOLDER GRACZ", this.x, this.y, this.promien * 0.20, "white");
+            } else {
+                tekst(`PLACEHOLDER ${numerPlanety}`, this.x, this.y, this.promien * 0.25, "white");
+            }
         };
-
-        let tekst = function (tekst, x, y, rozmiar, kolor) {
-            ctx.fillStyle = kolor;
-            ctx.textAlign = "center"
-            ctx.font = `${rozmiar}px degolan`;
-            ctx.fillText(tekst, x, y);
-        };
-
-        let gracz = new Planeta(100, 100, 50);
 
         let map = { 37: false, 38: false, 39: false, 40: false };
         $(document).keydown(function (zdarzenie) {
@@ -132,10 +171,11 @@
             ctx.clearRect(0, 0, SZER, WYS);
             ctx.fillStyle = "black";
             ctx.fillRect(0, 0, SZER, WYS);
-            rysujNiebo(gracz.x, gracz.y);
-            ctx.fillStyle = "magenta";
-            gracz.rysuj();
             gracz.przesuwaj(kierunek, timeDiff);
+            rysujNiebo(gracz.newX, gracz.newY);
+            planety.forEach(planeta => {
+                planeta.rysuj(planety.indexOf(planeta));
+            });
 
             if (pauza === false) {
                 reqId = window.requestAnimationFrame(function () {
