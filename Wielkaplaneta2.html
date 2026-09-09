@@ -6,15 +6,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://code.jquery.com/jquery-4.0.0.js"></script>
     <title>Wielka Planeta 2.0</title>
+    <style>
+        a {
+            color: white;
+            padding: 4px
+        }
 
+        #canvas {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        html,
+        body {
+            overflow: hidden;
+        }
+    </style>
 </head>
 
 <body>
-    <h1 id="wznowGre" style="position: absolute;top: 189px;left: 381px;font-size: 75px;">WZNÓW GRĘ</h1>
-    <canvas id="canvas" width="1250" height="600"></canvas>
+    <h1 id="wznowGre" style="position: absolute;top: 189px;left: 381px;font-size: 75px"><a href
+            style="text-decoration: none;">WZNÓW GRĘ</a></h1>
+    <canvas id="canvas"></canvas>
     <script>
         const STARTTIME = Date.now();
-        const CANVAS = document.getElementById("canvas");
+        const canvas = document.getElementById("canvas");;
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
         const ctx = canvas.getContext("2d");
         const SZER = canvas.width;
         const WYS = canvas.height;
@@ -25,28 +46,50 @@
         const PRAWA = 39;
         const DOL = 40;
         const ESC = 27;
+        const ILERAZY = 100;
         let reqId;
         let pauza = false;
+        let gwiazdki = [];
+        let kierunek = 0;
+
         $("#wznowGre").hide();
+
+        for (let i = 0; i <= ILERAZY; i++) {
+            gwiazdki.push({
+                x: Math.floor(Math.random() * SZER),
+                y: Math.floor(Math.random() * WYS),
+                z: Math.floor(Math.random() * 10)
+            });
+        };
+
+        let rysujNiebo = function (x, y) {
+            gwiazdki.forEach(gwiazdka => {
+                ctx.beginPath();
+                ctx.fillStyle = "white";
+                ctx.arc(gwiazdka.x + x, gwiazdka.y + y, 3, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+        };
 
         let Planeta = function (x, y, promien) {
             this.x = x;
             this.y = y;
             this.promien = promien
+            this.PREDKOSC = 0.3
         };
 
-        Planeta.prototype.przesuwaj = function (kierunek) {
+        Planeta.prototype.przesuwaj = function (kierunek, timeDiff) {
             if (kierunek[GORA] && !(this.y < this.promien + 10)) {
-                this.y -= 10
+                this.y -= this.PREDKOSC * timeDiff
             }
             if (kierunek[DOL] && !(this.y > WYS - this.promien - 10)) {
-                this.y += 10
+                this.y += this.PREDKOSC * timeDiff
             }
             if (kierunek[LEWA] && !(this.x < this.promien + 10)) {
-                this.x -= 10
+                this.x -= this.PREDKOSC * timeDiff
             }
             if (kierunek[PRAWA] && !(this.x > SZER - this.promien - 10)) {
-                this.x += 10
+                this.x += this.PREDKOSC * timeDiff
             };
         };
 
@@ -56,8 +99,8 @@
             ctx.fill();
         };
 
-        let tekst = function (tekst, x, y, rozmiar) {
-            ctx.fillStyle = "black";
+        let tekst = function (tekst, x, y, rozmiar, kolor) {
+            ctx.fillStyle = kolor;
             ctx.textAlign = "center"
             ctx.font = `${rozmiar}px degolan`;
             ctx.fillText(tekst, x, y);
@@ -69,7 +112,7 @@
         $(document).keydown(function (zdarzenie) {
             if (zdarzenie.keyCode in map) {
                 map[zdarzenie.keyCode] = true;
-                gracz.przesuwaj(map);
+                kierunek = map;
             };
         }).keyup(function (zdarzenie) {
             if (zdarzenie.keyCode in map) {
@@ -87,22 +130,34 @@
             let time = Date.now();
             let timeDiff = time - lastTime;
             ctx.clearRect(0, 0, SZER, WYS);
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, SZER, WYS);
+            rysujNiebo(gracz.x, gracz.y);
             ctx.fillStyle = "magenta";
             gracz.rysuj();
-            ctx.strokeRect(0, 0, SZER, WYS);
+            gracz.przesuwaj(kierunek, timeDiff);
 
             if (pauza === false) {
                 reqId = window.requestAnimationFrame(function () {
                     gra(time);
                 })
             } else if (pauza === true) {
-                tekst("PAUZA", CENTERX, CENTERY - 150, 100);
+                tekst("PAUZA", CENTERX, CENTERY - 150, 100, "white");
                 $("#wznowGre").show();
+                $("#wznowGre").hover(function () {
+                    ;
+                    $("#wznowGre a").css("background-color", "white");
+                    $("#wznowGre a").css("color", "black");
+                }, function () {
+                    $("#wznowGre a").css("color", "white");
+                    $("#wznowGre a").css("background", "none");
+                });
+
                 $("#wznowGre").click(function () {
                     pauza = false;
                     gra(time);
                     $("#wznowGre").hide();
-                 });
+                });
             };
         };
 
