@@ -1,11 +1,12 @@
-[Plany.txt](https://github.com/user-attachments/files/31925397/Plany.txt)plany:
-poruszanie(zrobione)
-menu(zrobione)
-włożyć kod na githuba(zrobione)
-zrobić porządek na githubie(zrobione)
-kolizje(wip)
-tło(wip)
-podzielenie gry na osobne pliki
-tekstury
-planety, księzyce itd.
-mapa większa od ekranu
+- plany:
+- [X] poruszanie
+- [X]menu
+- [X]włożyć kod na githuba
+- [X] zrobić porządek na githubie
+- [X] tło
+- [X] dodać timediffa do poruszania
+- [] kolizje(wip)
+- [] podzielenie gry na osobne pliki
+- [] tekstury
+- [] planety, księzyce itd.
+- [] mapa większa od ekranu
