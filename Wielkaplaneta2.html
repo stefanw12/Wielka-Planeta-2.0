@@ -9,11 +9,12 @@
     <style>
         a {
             color: white;
-            padding: 4px
+            padding: 4px;
+            text-decoration: none;
+            background-color: black;
         }
 
         #canvas {
-            position: fixed;
             left: 0;
             top: 0;
             width: 100%;
@@ -24,12 +25,16 @@
         body {
             overflow: hidden;
         }
+
+        #wznowGre {
+            position: absolute;
+            font-size: 75px;
+        }
     </style>
 </head>
 
 <body>
-    <h1 id="wznowGre" style="position: absolute;top: 189px;left: 381px;font-size: 75px"><a href
-            style="text-decoration: none;">WZNÓW GRĘ</a></h1>
+    <h1 id="wznowGre"><a href>WZNÓW GRĘ</a></h1>
     <canvas id="canvas"></canvas>
     <script>
         const STARTTIME = Date.now();
@@ -39,13 +44,8 @@
         const ctx = canvas.getContext("2d");
         const SZER = canvas.width;
         const WYS = canvas.height;
-        const CENTERX = canvas.width / 2;
-        const CENTERY = canvas.height / 2;
-        const LEWA = 37;
-        const GORA = 38;
-        const PRAWA = 39;
-        const DOL = 40;
-        const ESC = 27;
+        const CENTERX = SZER / 2;
+        const CENTERY = WYS / 2;
         const LICZBAGWIAZDEK = 150;
         const LICZBAPLANET = 11;//bo z graczem
         let reqId;
@@ -53,10 +53,30 @@
         let kierunek = 0;
         let gwiazdki = [];
         let planety = [];
-
-
+        const KLAWISZE = {
+            "LEWA": 37,
+            "GORA": 38,
+            "DOL": 40,
+            "PRAWA": 39,
+            "ESC": 27,
+            "W": 87,
+            "A": 65,
+            "S": 83,
+            "D": 68,
+        };
 
         $("#wznowGre").hide();
+        $("#wznowGre").css("top", `${CENTERY - 100}px`);
+        $("#wznowGre").css("left", `${CENTERX - 250}px`);
+
+        let sprawdzKolizjeKuli = function (x1, x2, y1, y2, promien1, promien2, kolizja) {
+            if (Math.abs(x1 - x2) < promien1 + promien2 &&
+                Math.abs(y1 - y2) < promien1 + promien2) {
+                return kolizja = true
+            } else {
+                return kolizja = false
+            }
+        }
 
         for (let i = 0; i <= LICZBAGWIAZDEK; i++) {
             gwiazdki.push({
@@ -92,45 +112,37 @@
         let gracz = new Planeta(100, 100, 50);
         planety.push(gracz);
         while (planety.length < LICZBAPLANET) {
-            let nowyPromien = Math.floor(Math.random() * 70) + 40;
-            let nowyX = Math.floor(Math.random() * SZER - nowyPromien);
-            let nowyY = Math.floor(Math.random() * WYS - nowyPromien);
+            let nowyPromien = Math.floor(Math.random() * 80) + 50;
+            let nowyX = Math.floor(Math.random() * (SZER - nowyPromien));
+            let nowyY = Math.floor(Math.random() * (WYS - nowyPromien));
             let kolizja = false;
             if (nowyX < nowyPromien) {
-                nowyX += nowyPromien
-            }
-            if (Math.abs(50 - nowyX) < nowyPromien + 50) {
                 nowyX += nowyPromien
             }
             if (nowyY < nowyPromien) {
                 nowyY += nowyPromien
             }
-            if (Math.abs(50 - nowyY) < nowyPromien + 50) {
-                nowyY += nowyPromien
-            }
-            planety.forEach(element => {
-                if (Math.abs(element.x - nowyX) < element.promien + nowyPromien &&
-                    Math.abs(element.y - nowyY) < element.promien + nowyPromien) {
-                    kolizja = true
-                }
-            });
+            planety.forEach(planeta => {
+                if (sprawdzKolizjeKuli(planeta.x, nowyX, planeta.y, nowyY, planeta.promien, nowyPromien)) { kolizja = true };
+            })
             if (!kolizja) {
                 planety.push(new Planeta(nowyX, nowyY, nowyPromien));
             }
-
         };
 
         Planeta.prototype.przesuwaj = function (kierunek, timeDiff) {
-            if (kierunek[GORA] && !(this.y < this.promien + 10)) {
+            if ((kierunek[KLAWISZE["GORA"]] || kierunek[KLAWISZE["W"]]) && !(this.y < this.promien + 10 && planety.forEach(planeta => {
+                sprawdzKolizjeKuli(gracz.x,planeta.x, gracz.y,planeta.y,gracz.promien, planeta.promien)
+            }))) {
                 this.y -= this.PREDKOSC * timeDiff
             }
-            if (kierunek[DOL] && !(this.y > WYS - this.promien - 10)) {
+            if ((kierunek[KLAWISZE["DOL"]] || kierunek[KLAWISZE["S"]]) && !(this.y > WYS - this.promien - 10)) {
                 this.y += this.PREDKOSC * timeDiff
             }
-            if (kierunek[LEWA] && !(this.x < this.promien + 10)) {
+            if ((kierunek[KLAWISZE["LEWA"]] || kierunek[KLAWISZE["A"]]) && !(this.x < this.promien + 10)) {
                 this.x -= this.PREDKOSC * timeDiff
             }
-            if (kierunek[PRAWA] && !(this.x > SZER - this.promien - 10)) {
+            if ((kierunek[KLAWISZE["PRAWA"]] || kierunek[KLAWISZE["D"]]) && !(this.x > SZER - this.promien - 10)) {
                 this.x += this.PREDKOSC * timeDiff
             };
         };
@@ -140,6 +152,8 @@
             ctx.arc(this.x, this.y, this.promien, 0, Math.PI * 2);
             ctx.fillStyle = "magenta"; //placeholder
             ctx.fill();
+            ctx.fillStyle = "yellow"
+            ctx.fillRect(this.x, this.y, 10, 10)//debug
             if (numerPlanety === 0) {
                 tekst("PLACEHOLDER GRACZ", this.x, this.y, this.promien * 0.20, "white");
             } else {
@@ -147,7 +161,7 @@
             }
         };
 
-        let map = { 37: false, 38: false, 39: false, 40: false };
+        let map = { 37: false, 38: false, 39: false, 40: false, 87: false, 65: false, 83: false, 68: false, };
         $(document).keydown(function (zdarzenie) {
             if (zdarzenie.keyCode in map) {
                 map[zdarzenie.keyCode] = true;
@@ -160,7 +174,7 @@
         });
 
         $(document).keydown(function (zdarzenie) {
-            if (zdarzenie.keyCode === ESC) {
+            if (zdarzenie.keyCode === KLAWISZE["ESC"]) {
                 pauza = true;
             }
         });
@@ -172,7 +186,7 @@
             ctx.fillStyle = "black";
             ctx.fillRect(0, 0, SZER, WYS);
             gracz.przesuwaj(kierunek, timeDiff);
-            rysujNiebo(gracz.newX, gracz.newY);
+            rysujNiebo(gracz.x, gracz.y);
             planety.forEach(planeta => {
                 planeta.rysuj(planety.indexOf(planeta));
             });
@@ -184,13 +198,14 @@
             } else if (pauza === true) {
                 tekst("PAUZA", CENTERX, CENTERY - 150, 100, "white");
                 $("#wznowGre").show();
+
                 $("#wznowGre").hover(function () {
                     ;
                     $("#wznowGre a").css("background-color", "white");
                     $("#wznowGre a").css("color", "black");
                 }, function () {
                     $("#wznowGre a").css("color", "white");
-                    $("#wznowGre a").css("background", "none");
+                    $("#wznowGre a").css("background", "black");
                 });
 
                 $("#wznowGre").click(function () {
