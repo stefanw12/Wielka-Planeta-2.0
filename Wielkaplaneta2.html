@@ -53,6 +53,7 @@
         let kierunek = 0;
         let gwiazdki = [];
         let planety = [];
+        let księżyce = [];
         const KLAWISZE = {
             "LEWA": 37,
             "GORA": 38,
@@ -70,13 +71,16 @@
         $("#wznowGre").css("left", `${CENTERX - 250}px`);
 
         let sprawdzKolizjeKuli = function (x1, x2, y1, y2, promien1, promien2, kolizja) {
-            if (Math.abs(x1 - x2) < promien1 + promien2 &&
-                Math.abs(y1 - y2) < promien1 + promien2) {
+            if (Math.pow(Math.abs(x1 - x2), 2) + Math.pow(Math.abs(y1 - y2), 2) < Math.pow(promien1 + promien2, 2)) {
                 return kolizja = true
             } else {
                 return kolizja = false
             }
-        }
+        };
+
+        let sprawdzKolizjeObiektow = function (x, y, promien, lista = planety) {
+            return lista.some(element => element != gracz && sprawdzKolizjeKuli(x, element.x, y, element.y, promien, element.promien))
+        };
 
         for (let i = 0; i <= LICZBAGWIAZDEK; i++) {
             gwiazdki.push({
@@ -112,7 +116,7 @@
         let gracz = new Planeta(100, 100, 50);
         planety.push(gracz);
         while (planety.length < LICZBAPLANET) {
-            let nowyPromien = Math.floor(Math.random() * 80) + 50;
+            let nowyPromien = Math.floor(Math.random() * 75) + 50;
             let nowyX = Math.floor(Math.random() * (SZER - nowyPromien));
             let nowyY = Math.floor(Math.random() * (WYS - nowyPromien));
             let kolizja = false;
@@ -131,18 +135,20 @@
         };
 
         Planeta.prototype.przesuwaj = function (kierunek, timeDiff) {
-            if ((kierunek[KLAWISZE["GORA"]] || kierunek[KLAWISZE["W"]]) && !(this.y < this.promien + 10 && planety.forEach(planeta => {
-                sprawdzKolizjeKuli(gracz.x,planeta.x, gracz.y,planeta.y,gracz.promien, planeta.promien)
-            }))) {
+            if ((kierunek[KLAWISZE["GORA"]] || kierunek[KLAWISZE["W"]])
+                && !(this.y < this.promien + 10) && !sprawdzKolizjeObiektow(gracz.x, gracz.y - this.PREDKOSC * timeDiff, gracz.promien, planety)) {
                 this.y -= this.PREDKOSC * timeDiff
             }
-            if ((kierunek[KLAWISZE["DOL"]] || kierunek[KLAWISZE["S"]]) && !(this.y > WYS - this.promien - 10)) {
+            if ((kierunek[KLAWISZE["DOL"]] || kierunek[KLAWISZE["S"]])
+                && !(this.y > WYS - this.promien - 10) && !sprawdzKolizjeObiektow(gracz.x, gracz.y + this.PREDKOSC * timeDiff, gracz.promien, planety)) {
                 this.y += this.PREDKOSC * timeDiff
             }
-            if ((kierunek[KLAWISZE["LEWA"]] || kierunek[KLAWISZE["A"]]) && !(this.x < this.promien + 10)) {
+            if ((kierunek[KLAWISZE["LEWA"]] || kierunek[KLAWISZE["A"]])
+                && !(this.x < this.promien + 10) && !sprawdzKolizjeObiektow(gracz.x - this.PREDKOSC * timeDiff, gracz.y, gracz.promien, planety)) {
                 this.x -= this.PREDKOSC * timeDiff
             }
-            if ((kierunek[KLAWISZE["PRAWA"]] || kierunek[KLAWISZE["D"]]) && !(this.x > SZER - this.promien - 10)) {
+            if ((kierunek[KLAWISZE["PRAWA"]] || kierunek[KLAWISZE["D"]])
+                && !(this.x > SZER - this.promien - 10) && !sprawdzKolizjeObiektow(gracz.x + this.PREDKOSC * timeDiff, gracz.y, gracz.promien, planety)) {
                 this.x += this.PREDKOSC * timeDiff
             };
         };
@@ -187,6 +193,31 @@
             ctx.fillRect(0, 0, SZER, WYS);
             gracz.przesuwaj(kierunek, timeDiff);
             rysujNiebo(gracz.x, gracz.y);
+            ctx.strokeStyle = "white"
+            ctx.lineWidth = 4
+            let najblizszaPlaneta = {
+                odleglosc: Math.pow(Math.abs(gracz.x - planety[1].x), 2) + Math.pow(Math.abs(gracz.y - planety[1].y), 2),
+                x: planety[1].x,
+                y: planety[1].y
+            }
+            planety.forEach(planeta => {
+                if (planeta != gracz) {
+                    let odl = Math.pow(Math.abs(gracz.x - planeta.x), 2) + Math.pow(Math.abs(gracz.y - planeta.y), 2)
+                    if (odl < najblizszaPlaneta.odleglosc) {
+                        najblizszaPlaneta = {
+                            x: planeta.x,
+                            y: planeta.y,
+                            odleglosc: odl,
+                        }
+                    }
+                }
+            })
+
+            ctx.beginPath()
+            ctx.moveTo(gracz.x, gracz.y)
+            ctx.lineTo(najblizszaPlaneta.x, najblizszaPlaneta.y)
+            ctx.stroke()
+
             planety.forEach(planeta => {
                 planeta.rysuj(planety.indexOf(planeta));
             });
