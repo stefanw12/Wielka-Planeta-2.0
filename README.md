@@ -9,10 +9,11 @@
 - [x] dodać napis "placeholder" na planecie
 - [x] naprawić menu pauzy
 - [x] kolizje
-- [ ] sprawić by menu pauzy nie "reloadowało" gry (wip)
+- [x] (eksperymentalnie) dodać że nie można się poruszyć w miejsce gdzie jest już planeta
+- [ ] funkcja do liczenia odległości (wip)
+- [ ] podzielenie gry na osobne pliki (wip)
 - [ ] księzyce itd. (wip)
-- [ ] (eksperymentalnie) dodać że nie można się poruszyć w miejsce gdzie jest już planeta
+- [ ] sprawić by menu pauzy nie "reloadowało" gry (wip)
 - [ ] księżyce dookoła planet
 - [ ] mapa większa od ekranu
 - [ ] tekstury
-- [ ] podzielenie gry na osobne pliki
