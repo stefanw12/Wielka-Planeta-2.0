@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://code.jquery.com/jquery-4.0.0.js"></script>
+    <title>Wielka Planeta 2.0</title>
+    <style>
+        a {
+            color: white;
+            padding: 4px;
+            text-decoration: none;
+            background-color: black;
+        }
+
+        #canvas {
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        html,
+        body {
+            overflow: hidden;
+        }
+
+        #wznowGre {
+            position: absolute;
+            font-size: 75px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 id="wznowGre"><a href>WZNÓW GRĘ</a></h1>
+    <canvas id="canvas"></canvas>
+    <script>
+        const STARTTIME = Date.now();
+        const canvas = document.getElementById("canvas");;
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const ctx = canvas.getContext("2d");
+        const SZER = canvas.width;
+        const WYS = canvas.height;
+        const CENTERX = SZER / 2;
+        const CENTERY = WYS / 2;
+        const LICZBAGWIAZDEK = 150;
+        const LICZBAPLANET = 11;//bo z graczem
+        let reqId;
+        let pauza = false;
+        let kierunek = 0;
+        let gwiazdki = [];
+        let planety = [];
+        let księżyce = [];
+        const KLAWISZE = {
+            "LEWA": 37,
+            "GORA": 38,
+            "DOL": 40,
+            "PRAWA": 39,
+            "ESC": 27,
+            "W": 87,
+            "A": 65,
+            "S": 83,
+            "D": 68,
+        };
+
+        $("#wznowGre").hide();
+        $("#wznowGre").css("top", `${CENTERY - 100}px`);
+        $("#wznowGre").css("left", `${CENTERX - 250}px`);
+
+        let sprawdzKolizjeKuli = function (x1, x2, y1, y2, promien1, promien2, kolizja) {
+            if (Math.pow(Math.abs(x1 - x2), 2) + Math.pow(Math.abs(y1 - y2), 2) < Math.pow(promien1 + promien2, 2)) {
+                return kolizja = true
+            } else {
+                return kolizja = false
+            }
+        };
+
+        let sprawdzKolizjeObiektow = function (x, y, promien, lista = planety) {
+            return lista.some(element => element != gracz && sprawdzKolizjeKuli(x, element.x, y, element.y, promien, element.promien))
+        };
+
+        for (let i = 0; i <= LICZBAGWIAZDEK; i++) {
+            gwiazdki.push({
+                x: Math.floor(Math.random() * SZER),
+                y: Math.floor(Math.random() * WYS),
+                z: Math.random() * 0.1
+            });
+        };
+
+        let rysujNiebo = function () {
+            gwiazdki.forEach(gwiazdka => {
+                ctx.beginPath();
+                ctx.fillStyle = "white";
+                ctx.arc(gwiazdka.x + gracz.x * gwiazdka.z, gwiazdka.y + gracz.y * gwiazdka.z, 45 * gwiazdka.z, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+        };
+
+        let tekst = function (tekst, x, y, rozmiar, kolor) {
+            ctx.fillStyle = kolor;
+            ctx.textAlign = "center"
+            ctx.font = `${rozmiar}px degolan`;
+            ctx.fillText(tekst, x, y);
+        };
+
+        let Planeta = function (x, y, promien) {
+            this.x = x;
+            this.y = y;
+            this.promien = promien
+            this.PREDKOSC = 0.25
+        };
+
+        let gracz = new Planeta(100, 100, 50);
+        planety.push(gracz);
+        while (planety.length < LICZBAPLANET) {
+            let nowyPromien = Math.floor(Math.random() * 75) + 50;
+            let nowyX = Math.floor(Math.random() * (SZER - nowyPromien));
+            let nowyY = Math.floor(Math.random() * (WYS - nowyPromien));
+            let kolizja = false;
+            if (nowyX < nowyPromien) {
+                nowyX += nowyPromien
+            }
+            if (nowyY < nowyPromien) {
+                nowyY += nowyPromien
+            }
+            planety.forEach(planeta => {
+                if (sprawdzKolizjeKuli(planeta.x, nowyX, planeta.y, nowyY, planeta.promien, nowyPromien)) { kolizja = true };
+            })
+            if (!kolizja) {
+                planety.push(new Planeta(nowyX, nowyY, nowyPromien));
+            }
+        };
+
+        Planeta.prototype.przesuwaj = function (kierunek, timeDiff) {
+            if ((kierunek[KLAWISZE["GORA"]] || kierunek[KLAWISZE["W"]])
+                && !(this.y < this.promien + 10) && !sprawdzKolizjeObiektow(gracz.x, gracz.y - this.PREDKOSC * timeDiff, gracz.promien, planety)) {
+                this.y -= this.PREDKOSC * timeDiff
+            }
+            if ((kierunek[KLAWISZE["DOL"]] || kierunek[KLAWISZE["S"]])
+                && !(this.y > WYS - this.promien - 10) && !sprawdzKolizjeObiektow(gracz.x, gracz.y + this.PREDKOSC * timeDiff, gracz.promien, planety)) {
+                this.y += this.PREDKOSC * timeDiff
+            }
+            if ((kierunek[KLAWISZE["LEWA"]] || kierunek[KLAWISZE["A"]])
+                && !(this.x < this.promien + 10) && !sprawdzKolizjeObiektow(gracz.x - this.PREDKOSC * timeDiff, gracz.y, gracz.promien, planety)) {
+                this.x -= this.PREDKOSC * timeDiff
+            }
+            if ((kierunek[KLAWISZE["PRAWA"]] || kierunek[KLAWISZE["D"]])
+                && !(this.x > SZER - this.promien - 10) && !sprawdzKolizjeObiektow(gracz.x + this.PREDKOSC * timeDiff, gracz.y, gracz.promien, planety)) {
+                this.x += this.PREDKOSC * timeDiff
+            };
+        };
+
+        Planeta.prototype.rysuj = function (numerPlanety) {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.promien, 0, Math.PI * 2);
+            ctx.fillStyle = "magenta"; //placeholder
+            ctx.fill();
+            ctx.fillStyle = "yellow"
+            ctx.fillRect(this.x, this.y, 10, 10)//debug
+            if (numerPlanety === 0) {
+                tekst("PLACEHOLDER GRACZ", this.x, this.y, this.promien * 0.20, "white");
+            } else {
+                tekst(`PLACEHOLDER ${numerPlanety}`, this.x, this.y, this.promien * 0.25, "white");
+            }
+        };
+
+        let map = { 37: false, 38: false, 39: false, 40: false, 87: false, 65: false, 83: false, 68: false, };
+        $(document).keydown(function (zdarzenie) {
+            if (zdarzenie.keyCode in map) {
+                map[zdarzenie.keyCode] = true;
+                kierunek = map;
+            };
+        }).keyup(function (zdarzenie) {
+            if (zdarzenie.keyCode in map) {
+                map[zdarzenie.keyCode] = false;
+            }
+        });
+
+        $(document).keydown(function (zdarzenie) {
+            if (zdarzenie.keyCode === KLAWISZE["ESC"]) {
+                pauza = true;
+            }
+        });
+
+        let gra = function (lastTime) {
+            let time = Date.now();
+            let timeDiff = time - lastTime;
+            ctx.clearRect(0, 0, SZER, WYS);
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, SZER, WYS);
+            gracz.przesuwaj(kierunek, timeDiff);
+            rysujNiebo(gracz.x, gracz.y);
+            ctx.strokeStyle = "white"
+            ctx.lineWidth = 4
+            let najblizszaPlaneta = {
+                odleglosc: Math.pow(Math.abs(gracz.x - planety[1].x), 2) + Math.pow(Math.abs(gracz.y - planety[1].y), 2),
+                x: planety[1].x,
+                y: planety[1].y
+            }
+            planety.forEach(planeta => {
+                if (planeta != gracz) {
+                    let odl = Math.pow(Math.abs(gracz.x - planeta.x), 2) + Math.pow(Math.abs(gracz.y - planeta.y), 2)
+                    if (odl < najblizszaPlaneta.odleglosc) {
+                        najblizszaPlaneta = {
+                            x: planeta.x,
+                            y: planeta.y,
+                            odleglosc: odl,
+                        }
+                    }
+                }
+            })
+
+            ctx.beginPath()
+            ctx.moveTo(gracz.x, gracz.y)
+            ctx.lineTo(najblizszaPlaneta.x, najblizszaPlaneta.y)
+            ctx.stroke()
+
+            planety.forEach(planeta => {
+                planeta.rysuj(planety.indexOf(planeta));
+            });
+
+            if (pauza === false) {
+                reqId = window.requestAnimationFrame(function () {
+                    gra(time);
+                })
+            } else if (pauza === true) {
+                tekst("PAUZA", CENTERX, CENTERY - 150, 100, "white");
+                $("#wznowGre").show();
+
+                $("#wznowGre").hover(function () {
+                    ;
+                    $("#wznowGre a").css("background-color", "white");
+                    $("#wznowGre a").css("color", "black");
+                }, function () {
+                    $("#wznowGre a").css("color", "white");
+                    $("#wznowGre a").css("background", "black");
+                });
+
+                $("#wznowGre").click(function () {
+                    pauza = false;
+                    gra(time);
+                    $("#wznowGre").hide();
+                });
+            };
+        };
+
+        gra(STARTTIME);
+    </script>
+</body>
+
+</html>
