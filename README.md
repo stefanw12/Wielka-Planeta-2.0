@@ -12,8 +12,10 @@
 - [x] (eksperymentalnie) dodać że nie można się poruszyć w miejsce gdzie jest już planeta
 - [x] funkcja do liczenia odległości
 - [x] podzielenie gry na osobne pliki
-- [ ] księzyce itd. (wip)
+- [x] księzyce
+- [x] mapa większa od ekranu
 - [ ] sprawić by menu pauzy nie "reloadowało" gry (wip)
 - [ ] księżyce dookoła planet
-- [ ] mapa większa od ekranu
+- [ ] losowe kolory dla planet
+- [ ] dodać więcej róznych ciał niebieskich
 - [ ] tekstury
