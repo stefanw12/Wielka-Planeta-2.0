@@ -129,10 +129,10 @@ let Planeta = function (x, y, promien) {
 
 let gracz = new Planeta(100, 100, 50);
 planety.push(gracz);
-while (planety.length < LICZBAPLANET) {
+while (planety.length < LICZBAPLANET) { // generacja planet
     let nowyPromien = Math.floor(Math.random() * 75) + 50;
-    let nowyX = Math.floor(Math.random() * (SZER - nowyPromien));
-    let nowyY = Math.floor(Math.random() * (WYS - nowyPromien));
+    let nowyX = Math.floor(Math.random() * (BUFORSZER - nowyPromien));
+    let nowyY = Math.floor(Math.random() * (BUFORWYS - nowyPromien));
     let kolizja = false;
     if (nowyX < nowyPromien) {
         nowyX += nowyPromien
