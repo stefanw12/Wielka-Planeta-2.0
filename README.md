@@ -10,8 +10,8 @@
 - [x] naprawić menu pauzy
 - [x] kolizje
 - [x] (eksperymentalnie) dodać że nie można się poruszyć w miejsce gdzie jest już planeta
-- [ ] funkcja do liczenia odległości (wip)
-- [ ] podzielenie gry na osobne pliki (wip)
+- [x] funkcja do liczenia odległości
+- [x] podzielenie gry na osobne pliki
 - [ ] księzyce itd. (wip)
 - [ ] sprawić by menu pauzy nie "reloadowało" gry (wip)
 - [ ] księżyce dookoła planet
