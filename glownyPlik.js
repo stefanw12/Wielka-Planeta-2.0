@@ -16,7 +16,10 @@ const CENTERY = WYS / 2;
 const LICZBAGWIAZDEK = 500;
 const LICZBAPLANET = 11;//bo z graczem
 const LICZBAKS = LICZBAPLANET - 1;
-let planety = [];
+const STARTMINIMAPX = SZER - 325;
+const STARTMINIMAPY = 30;
+let miniMapX = SZER - 300;
+let miniMapY = 30;
 let reqId = 0;
 let pauza = false;
 let pokazFps = false;
@@ -26,6 +29,7 @@ let kierunek = 0;
 let stareReqId = 0;
 let gwiazdki = [];
 let ksiezyce = [];
+let planety = [];
 let obiekty = [planety, ksiezyce]
 let KLAWISZE = {
     "LEWA": 37,
@@ -99,11 +103,11 @@ let sprawdzKolizjeKuli = function (x1, x2, y1, y2, promien1, promien2, kolizja) 
     }
 };
 
-let sprawdzKolizjeObiektow = function (x, y, promien, lista) {
+let sprawdzKolizjeObiektow = function (x, y, promien, lista,  zGraczem = false) {
     if (!lista) {
-        return obiekty.some(obiekt => obiekt.some(element => element != gracz && sprawdzKolizjeKuli(x, element.x, y, element.y, promien, element.promien)));
+        return obiekty.some(obiekt => obiekt.some(element => (element != gracz || zGraczem) && sprawdzKolizjeKuli(x, element.x, y, element.y, promien, element.promien)));
     } else {
-        return lista.some(element => element != gracz && sprawdzKolizjeKuli(x, element.x, y, element.y, promien, element.promien));
+        return lista.some(element => (element != gracz || zGraczem) && sprawdzKolizjeKuli(x, element.x, y, element.y, promien, element.promien));
     }
 };
 
@@ -152,14 +156,28 @@ function generuj(lista, ile, obiekt, minProm, maxProm) {
         })
         obiekty.forEach(element => {
             if (element != lista) {
-                if (sprawdzKolizjeObiektow(nowyX, nowyY, nowyPromien, element)) {kolizja = true}
+                if (sprawdzKolizjeObiektow(nowyX, nowyY, nowyPromien, element, true)) { kolizja = true }
             }
         })
         if (!kolizja) {
             lista.push(new obiekt(nowyX, nowyY, nowyPromien));
         }
-    };
-}
+    }
+};
+
+let rysujMinimape = function() {
+    canvasCtx.fillStyle = "black";
+    canvasCtx.strokeStyle = "white";
+    canvasCtx.lineWidth = 4;
+    canvasCtx.fillRect(SZER - 335, 20, 320, 220);
+    canvasCtx.strokeRect(SZER - 335, 20, 320, 220);
+    canvasCtx.fillStyle = "magenta";
+    canvasCtx.beginPath();
+    canvasCtx.arc(miniMapX, miniMapY, gracz.promien * 0.1, 0, Math.PI * 2);
+    canvasCtx.fill();
+    miniMapX = STARTMINIMAPX + gracz.x * 0.1;
+    miniMapY = STARTMINIMAPY + gracz.y * 0.1;
+};
 
 /*     ##############
        ## GWIAZDKI ##
@@ -265,14 +283,14 @@ let gra = function (lastTime) {
     gracz.przesuwaj(timeDiff);
     aktWspolrzSw();
     rysujNiebo(gracz.x, gracz.y);
-    ctx.strokeStyle = "white"
-    ctx.lineWidth = 4
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 4;
     let najblizszaPlaneta = {
         odleglosc: odleglosc(gracz.x, planety[1].x, gracz.y, planety[1].y),
         x: planety[1].x,
         y: planety[1].y
-    }
-    
+    };
+
     planety.forEach(planeta => {
         if (planeta != gracz) {
             let odl = odleglosc(gracz.x, planeta.x, gracz.y, planeta.y)
@@ -316,6 +334,12 @@ let gra = function (lastTime) {
     };
     canvasCtx.clearRect(0, 0, SZER, WYS);
     canvasCtx.drawImage(bufor, worldX, worldY);
+    canvasCtx.fillStyle = "black";
+    canvasCtx.strokeStyle = "white";
+    canvasCtx.lineWidth = 4;
+    canvasCtx.fillRect(SZER - 320, 20, 300, 200);
+    canvasCtx.strokeRect(SZER - 320, 20, 300, 200);
+    canvasCtx.drawImage(bufor, SZER - 320, 20, 300, 200)
     ctx.clearRect(0, 0, BUFORSZER, BUFORWYS);
 };
 

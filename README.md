@@ -17,7 +17,7 @@
 - [x] sprawić by menu pauzy nie "reloadowało" gry
 - [x] togle licznik fps w menu
 - [x] dokończenie księżycy
-- [ ] minimapa (wip)
+- [x] minimapa
 - [ ] ślizganie po krawędziach (wip)
 - [ ] księżyce dookoła planet (wip)
 - [ ] losowe kolory dla planet
