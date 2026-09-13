@@ -5,6 +5,14 @@ a {
     background-color: black;
 }
 
+#fps {
+    position: absolute;
+    color: white;
+    background-color: black;
+    left: 10px;
+    top: 0px;
+}
+
 #canvas {
     left: 0;
     top: 0;
@@ -19,7 +27,7 @@ body {
     background-color: black;
 }
 
-#wznowGre {
+#wznowGre, #togleFps {
     position: absolute;
     font-size: 75px;
 }

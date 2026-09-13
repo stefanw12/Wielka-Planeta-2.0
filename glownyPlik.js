@@ -15,14 +15,18 @@ const CENTERX = SZER / 2;
 const CENTERY = WYS / 2;
 const LICZBAGWIAZDEK = 500;
 const LICZBAPLANET = 11;//bo z graczem
+const LICZBAKS = LICZBAPLANET - 1;
 let planety = [];
-let reqId;
+let reqId = 0;
 let pauza = false;
+let pokazFps = false;
 let worldX = 0;
 let worldY = 0;
 let kierunek = 0;
+let stareReqId = 0;
 let gwiazdki = [];
 let ksiezyce = [];
+let obiekty = [planety, ksiezyce]
 let KLAWISZE = {
     "LEWA": 37,
     "GORA": 38,
@@ -38,6 +42,50 @@ let wcisniete = { 37: false, 38: false, 39: false, 40: false, 87: false, 65: fal
 $("#wznowGre").hide();
 $("#wznowGre").css("top", `${CENTERY - 100}px`);
 $("#wznowGre").css("left", `${CENTERX - 250}px`);
+$("#wznowGre").hover(function () {
+    $("#wznowGre a").css("background-color", "white");
+    $("#wznowGre a").css("color", "black");
+}, function () {
+    $("#wznowGre a").css("color", "white");
+    $("#wznowGre a").css("background", "black");
+});
+$("#togleFps").hide();
+$("#togleFps").css("top", `${CENTERY}px`);
+$("#togleFps").css("left", `${CENTERX - 225}px`);
+$("#togleFps").hover(function () {
+    $("#togleFps a").css("background-color", "white");
+    $("#togleFps a").css("color", "black");
+}, function () {
+    $("#togleFps a").css("color", "white");
+    $("#togleFps a").css("background", "black");
+});
+$("#togleFps").click(function () {
+    console.log("aaaaaaaa")
+    if (pokazFps) {
+        pokazFps = false;
+        $("#fps").hide();
+    } else {
+        pokazFps = true;
+        $("#fps").show();
+    }
+});
+$("#fps").hide();
+
+$(document).keydown(function (zdarzenie) {
+    if (zdarzenie.keyCode in wcisniete && !pauza) {
+        wcisniete[zdarzenie.keyCode] = true;
+    };
+}).keyup(function (zdarzenie) {
+    if (zdarzenie.keyCode in wcisniete) {
+        wcisniete[zdarzenie.keyCode] = false;
+    }
+});
+
+$(document).keydown(function (zdarzenie) {
+    if (zdarzenie.keyCode === KLAWISZE["ESC"]) {
+        pauza = true;
+    }
+});
 
 let odleglosc = function (x1, x2, y1, y2) {
     return Math.sqrt(Math.pow(Math.abs(x1 - x2), 2) + Math.pow(Math.abs(y1 - y2), 2))
@@ -45,20 +93,28 @@ let odleglosc = function (x1, x2, y1, y2) {
 
 let sprawdzKolizjeKuli = function (x1, x2, y1, y2, promien1, promien2, kolizja) {
     if (odleglosc(x1, x2, y1, y2) < promien1 + promien2) {
-        return kolizja = true
+        return kolizja = true;
     } else {
-        return kolizja = false
+        return kolizja = false;
     }
 };
 
-let sprawdzKolizjeObiektow = function (x, y, promien, lista = planety) {
-    return lista.some(element => element != gracz && sprawdzKolizjeKuli(x, element.x, y, element.y, promien, element.promien))
+let sprawdzKolizjeObiektow = function (x, y, promien, lista) {
+    if (!lista) {
+        return obiekty.some(obiekt => obiekt.some(element => element != gracz && sprawdzKolizjeKuli(x, element.x, y, element.y, promien, element.promien)));
+    } else {
+        return lista.some(element => element != gracz && sprawdzKolizjeKuli(x, element.x, y, element.y, promien, element.promien));
+    }
 };
 
-let tekst = function (tekst, x, y, rozmiar, kolor) {
+let tekst = function (tekst, x, y, rozmiar, kolor, ramka = false, kolorRamki) {
+    if (ramka) {
+        ctx.fillStyle = kolorRamki
+        ctx.fillRect(x - rozmiar * 1.75, y + 13, rozmiar * tekst.length * 0.69, -rozmiar + 5)
+    }
     ctx.fillStyle = kolor;
-    ctx.textAlign = "center"
-    ctx.font = `${rozmiar}px degolan`;
+    ctx.textAlign = "center";
+    ctx.font = `${rozmiar}px Times New Roman`;
     ctx.fillText(tekst, x, y);
 };
 
@@ -79,21 +135,31 @@ let aktWspolrzSw = function () {
     }
 };
 
-$(document).keydown(function (zdarzenie) {
-    if (zdarzenie.keyCode in wcisniete) {
-        wcisniete[zdarzenie.keyCode] = true;
+function generuj(lista, ile, obiekt, minProm, maxProm) {
+    while (lista.length < ile) {
+        let nowyPromien = Math.floor(Math.random() * maxProm) + minProm;
+        let nowyX = Math.floor(Math.random() * (BUFORSZER - nowyPromien));
+        let nowyY = Math.floor(Math.random() * (BUFORWYS - nowyPromien));
+        let kolizja = false;
+        if (nowyX < nowyPromien) {
+            nowyX += nowyPromien
+        }
+        if (nowyY < nowyPromien) {
+            nowyY += nowyPromien
+        }
+        lista.forEach(element => {
+            if (sprawdzKolizjeKuli(element.x, nowyX, element.y, nowyY, element.promien, nowyPromien)) { kolizja = true };
+        })
+        obiekty.forEach(element => {
+            if (element != lista) {
+                if (sprawdzKolizjeObiektow(nowyX, nowyY, nowyPromien, element)) {kolizja = true}
+            }
+        })
+        if (!kolizja) {
+            lista.push(new obiekt(nowyX, nowyY, nowyPromien));
+        }
     };
-}).keyup(function (zdarzenie) {
-    if (zdarzenie.keyCode in wcisniete) {
-        wcisniete[zdarzenie.keyCode] = false;
-    }
-});
-
-$(document).keydown(function (zdarzenie) {
-    if (zdarzenie.keyCode === KLAWISZE["ESC"]) {
-        pauza = true;
-    }
-});
+}
 
 /*     ##############
        ## GWIAZDKI ##
@@ -129,41 +195,26 @@ let Planeta = function (x, y, promien) {
 
 let gracz = new Planeta(100, 100, 50);
 planety.push(gracz);
-while (planety.length < LICZBAPLANET) { // generacja planet
-    let nowyPromien = Math.floor(Math.random() * 75) + 50;
-    let nowyX = Math.floor(Math.random() * (BUFORSZER - nowyPromien));
-    let nowyY = Math.floor(Math.random() * (BUFORWYS - nowyPromien));
-    let kolizja = false;
-    if (nowyX < nowyPromien) {
-        nowyX += nowyPromien
-    }
-    if (nowyY < nowyPromien) {
-        nowyY += nowyPromien
-    }
-    planety.forEach(planeta => {
-        if (sprawdzKolizjeKuli(planeta.x, nowyX, planeta.y, nowyY, planeta.promien, nowyPromien)) { kolizja = true };
-    })
-    if (!kolizja) {
-        planety.push(new Planeta(nowyX, nowyY, nowyPromien));
-    }
-};
+
+generuj(planety, LICZBAPLANET, Planeta, 50, 75);
 
 Planeta.prototype.przesuwaj = function (timeDiff) {
+    let predkoscRzecz = this.PREDKOSC * timeDiff;
     if ((wcisniete[KLAWISZE["GORA"]] || wcisniete[KLAWISZE["W"]])
-        && !(this.y < this.promien + 10) && !sprawdzKolizjeObiektow(gracz.x, gracz.y - this.PREDKOSC * timeDiff, gracz.promien, planety)) {
-        this.y -= this.PREDKOSC * timeDiff
+        && !(this.y < this.promien + predkoscRzecz) && !sprawdzKolizjeObiektow(gracz.x, gracz.y - this.PREDKOSC * timeDiff, gracz.promien)) {
+        this.y -= predkoscRzecz
     }
     if ((wcisniete[KLAWISZE["DOL"]] || wcisniete[KLAWISZE["S"]])
-        && !(this.y > BUFORWYS - this.promien - 10) && !sprawdzKolizjeObiektow(gracz.x, gracz.y + this.PREDKOSC * timeDiff, gracz.promien, planety)) {
-        this.y += this.PREDKOSC * timeDiff
+        && !(this.y > BUFORWYS - this.promien - predkoscRzecz) && !sprawdzKolizjeObiektow(gracz.x, gracz.y + this.PREDKOSC * timeDiff, gracz.promien)) {
+        this.y += predkoscRzecz
     }
     if ((wcisniete[KLAWISZE["LEWA"]] || wcisniete[KLAWISZE["A"]])
-        && !(this.x < this.promien + 10) && !sprawdzKolizjeObiektow(gracz.x - this.PREDKOSC * timeDiff, gracz.y, gracz.promien, planety)) {
-        this.x -= this.PREDKOSC * timeDiff
+        && !(this.x < this.promien + predkoscRzecz) && !sprawdzKolizjeObiektow(gracz.x - this.PREDKOSC * timeDiff, gracz.y, gracz.promien)) {
+        this.x -= predkoscRzecz
     }
     if ((wcisniete[KLAWISZE["PRAWA"]] || wcisniete[KLAWISZE["D"]])
-        && !(this.x > BUFORSZER - this.promien - 10) && !sprawdzKolizjeObiektow(gracz.x + this.PREDKOSC * timeDiff, gracz.y, gracz.promien, planety)) {
-        this.x += this.PREDKOSC * timeDiff
+        && !(this.x > BUFORSZER - this.promien - predkoscRzecz) && !sprawdzKolizjeObiektow(gracz.x + this.PREDKOSC * timeDiff, gracz.y, gracz.promien)) {
+        this.x += predkoscRzecz
     };
 };
 
@@ -194,17 +245,22 @@ let Ksiezyc = function (x, y, promien) {
 Ksiezyc.prototype.rysuj = function (numerKs) {
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.promien, 0, Math.PI * 2);
-    ctx.fillStyle = "pink"
+    ctx.fillStyle = "rgb(255, 0, 200)"
     ctx.fill();
     tekst("KSIĘŻYC " + numerKs, this.x, this.y, this.promien * 0.4, "white");
 }
 
-let testowyKs = new Ksiezyc(200, 200, 50)
-ksiezyce.push(testowyKs)
+generuj(ksiezyce, LICZBAKS, Ksiezyc, 20, 75);
+
+/*     #########
+       ## GRA ##
+       #########   */
 
 let gra = function (lastTime) {
+    //console.log(reqId)
     let time = Date.now();
     let timeDiff = time - lastTime;
+
     ctx.clearRect(0, 0, SZER, WYS);
     gracz.przesuwaj(timeDiff);
     aktWspolrzSw();
@@ -216,7 +272,7 @@ let gra = function (lastTime) {
         x: planety[1].x,
         y: planety[1].y
     }
-    testowyKs.rysuj(1);
+    
     planety.forEach(planeta => {
         if (planeta != gracz) {
             let odl = odleglosc(gracz.x, planeta.x, gracz.y, planeta.y)
@@ -238,33 +294,34 @@ let gra = function (lastTime) {
     planety.forEach(planeta => {
         planeta.rysuj(planety.indexOf(planeta));
     });
-    canvasCtx.clearRect(0, 0, SZER, WYS);
-    canvasCtx.drawImage(bufor, worldX, worldY);
-    ctx.clearRect(0, 0, BUFORSZER, BUFORWYS);
+    ksiezyce.forEach(ksiezyc => {
+        ksiezyc.rysuj(ksiezyce.indexOf(ksiezyc));
+    })
 
     if (pauza === false) {
         reqId = window.requestAnimationFrame(function () {
             gra(time);
         })
-    } else if (pauza === true) {
-        tekst("PAUZA", CENTERX, CENTERY - 150, 100, "white");
+    } else if (pauza === true) { //pauza
+        tekst("PAUZA", CENTERX, CENTERY - 120, 100, "white", true, "black");
         $("#wznowGre").show();
-
-        $("#wznowGre").hover(function () {
-            ;
-            $("#wznowGre a").css("background-color", "white");
-            $("#wznowGre a").css("color", "black");
-        }, function () {
-            $("#wznowGre a").css("color", "white");
-            $("#wznowGre a").css("background", "black");
-        });
-
+        $("#togleFps").show();
         $("#wznowGre").click(function () {
             pauza = false;
+            window.cancelAnimationFrame(reqId);
             gra(time);
             $("#wznowGre").hide();
+            $("#togleFps").hide();
         });
     };
+    canvasCtx.clearRect(0, 0, SZER, WYS);
+    canvasCtx.drawImage(bufor, worldX, worldY);
+    ctx.clearRect(0, 0, BUFORSZER, BUFORWYS);
 };
 
 gra(STARTTIME);
+setInterval(function () {
+    let fps = reqId - stareReqId;
+    stareReqId = reqId;
+    $("#fps").text(fps + " fps");
+}, 1000);

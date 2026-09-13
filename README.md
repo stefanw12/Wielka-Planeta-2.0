@@ -14,10 +14,12 @@
 - [x] podzielenie gry na osobne pliki
 - [x] księzyce
 - [x] mapa większa od ekranu
-- [ ] sprawić by menu pauzy nie "reloadowało" gry (*wiecznie* wip)
-- [ ] dokończenie księżycy (wip)
+- [x] sprawić by menu pauzy nie "reloadowało" gry
+- [x] togle licznik fps w menu
+- [x] dokończenie księżycy
 - [ ] minimapa (wip)
-- [ ] księżyce dookoła planet
+- [ ] ślizganie po krawędziach (wip)
+- [ ] księżyce dookoła planet (wip)
 - [ ] losowe kolory dla planet
 - [ ] dodać więcej róznych ciał niebieskich
 - [ ] tekstury
