@@ -1,0 +1,13 @@
+let rysujMinimape = function() {
+    canvasCtx.fillStyle = "black";
+    canvasCtx.strokeStyle = "white";
+    canvasCtx.lineWidth = 4;
+    canvasCtx.fillRect(SZER - 335, 20, 320, 220);
+    canvasCtx.strokeRect(SZER - 335, 20, 320, 220);
+    canvasCtx.fillStyle = "magenta";
+    canvasCtx.beginPath();
+    canvasCtx.arc(miniMapX, miniMapY, gracz.promien * 0.1, 0, Math.PI * 2);
+    canvasCtx.fill();
+    miniMapX = STARTMINIMAPX + gracz.x * 0.1;
+    miniMapY = STARTMINIMAPY + gracz.y * 0.1;
+};
