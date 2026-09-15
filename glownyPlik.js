@@ -11,11 +11,9 @@ const BUFORSZER = 3000;
 const BUFORWYS = 2000;
 bufor.width = BUFORSZER;
 bufor.height = BUFORWYS;
-const CENTERX = SZER / 2;
-const CENTERY = WYS / 2;
 const LICZBAGWIAZDEK = 500;
-const LICZBAPLANET = 11;//bo z graczem
-const LICZBAKS = LICZBAPLANET - 1;
+const LICZBAPLANET = 15;
+const LICZBAKS = LICZBAPLANET;
 const STARTMINIMAPX = SZER - 325;
 const STARTMINIMAPY = 30;
 let miniMapX = SZER - 300;
@@ -27,10 +25,15 @@ let worldX = 0;
 let worldY = 0;
 let kierunek = 0;
 let stareReqId = 0;
+let fps = 60;
+let zoom = 100;
+let centerX = SZER / 2
+let centerY = WYS / 2
 let gwiazdki = [];
 let ksiezyce = [];
 let planety = [];
-let obiekty = [planety, ksiezyce]
+let gracze = [];
+let obiekty = [planety, ksiezyce, gracze];
 let KLAWISZE = {
     "LEWA": 37,
     "GORA": 38,
@@ -41,11 +44,12 @@ let KLAWISZE = {
     "A": 65,
     "S": 83,
     "D": 68,
+    "R": 82,
 };
 let wcisniete = { 37: false, 38: false, 39: false, 40: false, 87: false, 65: false, 83: false, 68: false };
 $("#wznowGre").hide();
-$("#wznowGre").css("top", `${CENTERY - 100}px`);
-$("#wznowGre").css("left", `${CENTERX - 250}px`);
+$("#wznowGre").css("top", `${centerY - 100}px`);
+$("#wznowGre").css("left", `${centerX - 250}px`);
 $("#wznowGre").hover(function () {
     $("#wznowGre a").css("background-color", "white");
     $("#wznowGre a").css("color", "black");
@@ -54,8 +58,8 @@ $("#wznowGre").hover(function () {
     $("#wznowGre a").css("background", "black");
 });
 $("#togleFps").hide();
-$("#togleFps").css("top", `${CENTERY}px`);
-$("#togleFps").css("left", `${CENTERX - 225}px`);
+$("#togleFps").css("top", `${centerY}px`);
+$("#togleFps").css("left", `${centerX - 225}px`);
 $("#togleFps").hover(function () {
     $("#togleFps a").css("background-color", "white");
     $("#togleFps a").css("color", "black");
@@ -64,7 +68,6 @@ $("#togleFps").hover(function () {
     $("#togleFps a").css("background", "black");
 });
 $("#togleFps").click(function () {
-    console.log("aaaaaaaa")
     if (pokazFps) {
         pokazFps = false;
         $("#fps").hide();
@@ -89,26 +92,39 @@ $(document).keydown(function (zdarzenie) {
     if (zdarzenie.keyCode === KLAWISZE["ESC"]) {
         pauza = true;
     }
+    if (zdarzenie.keyCode === KLAWISZE["R"]) {
+        zoom = 100;
+    }
 });
+
+addEventListener("wheel", (zdarzenie) => {
+    zoom -= zdarzenie.deltaY * 0.1;
+    if (zoom > 170) {
+        zoom = 170;
+    }
+    if (zoom < 60) {
+        zoom = 60;
+    }
+})
 
 let odleglosc = function (x1, x2, y1, y2) {
     return Math.sqrt(Math.pow(Math.abs(x1 - x2), 2) + Math.pow(Math.abs(y1 - y2), 2))
 }
 
-let sprawdzKolizjeKuli = function (x1, x2, y1, y2, promien1, promien2, kolizja) {
-    if (odleglosc(x1, x2, y1, y2) < promien1 + promien2) {
-        return kolizja = true;
+let sprawdzKolizjeKuli = function (x1, x2, y1, y2, promien1, promien2) {
+    if (odleglosc(x1, x2, y1, y2) < promien1 + promien2 && odleglosc(x1, x2, y1, y2) > 0) {
+        return true;
     } else {
-        return kolizja = false;
+        return false;
     }
 };
 
-let sprawdzKolizjeObiektow = function (x, y, promien, lista,  zGraczem = false) {
-    if (!lista) {
-        return obiekty.some(obiekt => obiekt.some(element => (element != gracz || zGraczem) && sprawdzKolizjeKuli(x, element.x, y, element.y, promien, element.promien)));
-    } else {
-        return lista.some(element => (element != gracz || zGraczem) && sprawdzKolizjeKuli(x, element.x, y, element.y, promien, element.promien));
-    }
+let sprawdzKolizjeObiektowBolean = function (x, y, promien, lista = obiekty, zGraczem = false) {
+    return lista.flat().some(element => (element != gracz || zGraczem) && sprawdzKolizjeKuli(x, element.x, y, element.y, promien, element.promien));
+};
+
+let sprawdzKolizjeObiektowObject = function (x, y, promien, lista = obiekty) {
+    return lista.flat().find((element) => sprawdzKolizjeKuli(x, element.x, y, element.y, promien, element.promien));
 };
 
 let tekst = function (tekst, x, y, rozmiar, kolor, ramka = false, kolorRamki) {
@@ -123,60 +139,48 @@ let tekst = function (tekst, x, y, rozmiar, kolor, ramka = false, kolorRamki) {
 };
 
 let aktWspolrzSw = function () {
-    if (gracz.x > CENTERX && gracz.x < BUFORSZER - CENTERX) {
-        worldX = -gracz.x + CENTERX;
-    } else if (gracz.x < CENTERX) {
+    const zoomX = gracz.x * zoom / 100;
+    const zoomY = gracz.y * zoom / 100;
+    if (zoomX > centerX && zoomX < BUFORSZER - centerX) {
+        worldX = -zoomX + centerX;
+    } else if (zoomX < centerX) {
         worldX = 0;
-    } else if (gracz.x > SZER - CENTERX) {
-        worldX = -BUFORSZER + CENTERX * 2;
+    } else if (zoomX > SZER - centerX) {
+        worldX = -BUFORSZER + centerX * 2;
     }
-    if (gracz.y > CENTERY && gracz.y < BUFORWYS - CENTERY) {
-        worldY = -gracz.y + CENTERY;
-    } else if (gracz.y < CENTERY) {
+    if (zoomY > centerY && zoomY < BUFORWYS - centerY) {
+        worldY = -zoomY + centerY;
+    } else if (zoomY < centerY) {
         worldY = 0;
-    } else if (gracz.y > WYS - CENTERY) {
-        worldY = -BUFORWYS + CENTERY * 2;
+    } else if (zoomY > WYS - centerY) {
+        worldY = -BUFORWYS + centerY * 2;
     }
 };
 
 function generuj(lista, ile, obiekt, minProm, maxProm) {
     while (lista.length < ile) {
         let nowyPromien = Math.floor(Math.random() * maxProm) + minProm;
-        let nowyX = Math.floor(Math.random() * (BUFORSZER - nowyPromien));
-        let nowyY = Math.floor(Math.random() * (BUFORWYS - nowyPromien));
+        let nowyX = Math.floor(Math.random() * (BUFORSZER - nowyPromien * 4));
+        let nowyY = Math.floor(Math.random() * (BUFORWYS - nowyPromien * 4));
         let kolizja = false;
-        if (nowyX < nowyPromien) {
-            nowyX += nowyPromien
+        if (nowyX < nowyPromien * 4) {
+            nowyX = nowyPromien * 4
         }
-        if (nowyY < nowyPromien) {
-            nowyY += nowyPromien
+        if (nowyY < nowyPromien * 4) {
+            nowyY = nowyPromien * 4
         }
         lista.forEach(element => {
-            if (sprawdzKolizjeKuli(element.x, nowyX, element.y, nowyY, element.promien, nowyPromien)) { kolizja = true };
+            if (sprawdzKolizjeKuli(element.x, nowyX, element.y, nowyY, element.promien + element.ks.odl, nowyPromien)) { kolizja = true };
         })
         obiekty.forEach(element => {
             if (element != lista) {
-                if (sprawdzKolizjeObiektow(nowyX, nowyY, nowyPromien, element, true)) { kolizja = true }
+                if (sprawdzKolizjeObiektowBolean(nowyX, nowyY, nowyPromien, element, true)) { kolizja = true }
             }
         })
         if (!kolizja) {
             lista.push(new obiekt(nowyX, nowyY, nowyPromien));
         }
     }
-};
-
-let rysujMinimape = function() {
-    canvasCtx.fillStyle = "black";
-    canvasCtx.strokeStyle = "white";
-    canvasCtx.lineWidth = 4;
-    canvasCtx.fillRect(SZER - 335, 20, 320, 220);
-    canvasCtx.strokeRect(SZER - 335, 20, 320, 220);
-    canvasCtx.fillStyle = "magenta";
-    canvasCtx.beginPath();
-    canvasCtx.arc(miniMapX, miniMapY, gracz.promien * 0.1, 0, Math.PI * 2);
-    canvasCtx.fill();
-    miniMapX = STARTMINIMAPX + gracz.x * 0.1;
-    miniMapY = STARTMINIMAPY + gracz.y * 0.1;
 };
 
 /*     ##############
@@ -200,6 +204,98 @@ let rysujNiebo = function () {
     });
 };
 
+/*     ##############
+       ## KSIĘŻYCE ##
+       ##############  */
+
+let Ksiezyc = function (planeta) {
+    this.x = planeta.x + planeta.promien * 3;
+    this.y = planeta.y;
+    this.promien = planeta.promien * 0.4;
+    this.kat = 0;
+    this.odl = planeta.promien * 3;
+    this.predkosc = 0.001 * (this.promien / 2) * Math.random();
+    this.planeta = planeta
+    this.kolor = "rgb(" + Math.random() * 255 + "," + Math.random() * 255 + "," + Math.random() * 255 + ")";
+    if (this.predkosc < 0.00055) {
+        this.predkosc = 0.00055;
+    }
+};
+
+Ksiezyc.prototype.rysuj = function () {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.promien, 0, Math.PI * 2);
+    ctx.fillStyle = this.kolor;
+    ctx.fill();
+}
+
+Ksiezyc.prototype.przesuwaj = function () {
+    this.kat += this.predkosc;
+    this.x = this.odl * Math.cos(this.kat) + this.planeta.x;
+    this.y = this.odl * Math.sin(this.kat) + this.planeta.y;
+    if (sprawdzKolizjeKuli(this.x, gracz.x, this.y, gracz.y, this.promien, gracz.promien)) {
+        gracz.x
+        gracz.y
+    }
+};
+
+/*     ###########
+       ## GRACZ ##
+       ###########   */
+
+let Gracz = function (x, y, promien) {
+    this.x = x;
+    this.y = y;
+    this.promien = promien
+    this.PREDKOSC = 0.25
+};
+let gracz = new Gracz(100, 100, 50, false);
+gracze.push(gracz);
+
+Gracz.prototype.przesuwaj = function (timeDiff) {
+    let predkoscRzecz = this.PREDKOSC * timeDiff;
+    if ((wcisniete[KLAWISZE["GORA"]] || wcisniete[KLAWISZE["W"]])
+        && !(this.y < this.promien + predkoscRzecz) && !obsługaKolizji(0, -predkoscRzecz, this.x, this.y, this.promien)) {
+        this.y -= predkoscRzecz
+    }
+    if ((wcisniete[KLAWISZE["DOL"]] || wcisniete[KLAWISZE["S"]])
+        && !(this.y > BUFORWYS - this.promien - predkoscRzecz) && !obsługaKolizji(0, predkoscRzecz, this.x, this.y, this.promien)) {
+        this.y += predkoscRzecz
+    }
+    if ((wcisniete[KLAWISZE["LEWA"]] || wcisniete[KLAWISZE["A"]])
+        && !(this.x < this.promien + predkoscRzecz) && !obsługaKolizji(-predkoscRzecz, 0, this.x, this.y, this.promien)) {
+        this.x -= predkoscRzecz
+    }
+    if ((wcisniete[KLAWISZE["PRAWA"]] || wcisniete[KLAWISZE["D"]])
+        && !(this.x > BUFORSZER - this.promien - predkoscRzecz) && !obsługaKolizji(predkoscRzecz, 0, this.x, this.y, this.promien)) {
+        this.x += predkoscRzecz
+    };
+};
+
+Gracz.prototype.rysuj = function () {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.promien, 0, Math.PI * 2);
+    ctx.fillStyle = "magenta"; //placeholder
+    ctx.fill();
+    ctx.fillStyle = "yellow"
+    tekst("PLACEHOLDER GRACZ", this.x, this.y, this.promien * 0.20, "white");
+};
+
+let obsługaKolizji = function (korektaX, korektaY, x, y, promien) {
+    return obiekty.flat().some(element => element != gracz && element.promien * 2 > promien && sprawdzKolizjeKuli(x + korektaX, element.x, y + korektaY, element.y, promien, element.promien));
+};
+
+Gracz.prototype.wchlon = function (promien, x, y) {
+    if (planety.some(element => element.promien * 2 <= promien && sprawdzKolizjeObiektowBolean(x, y, promien, planety))) {
+        this.promien += sprawdzKolizjeObiektowObject(x, y, promien, planety).promien * 0.5;
+        planety.splice(planety.findIndex(element => sprawdzKolizjeKuli(x, element.x, y, element.y, promien, element.promien)), 1);
+    }
+    if (ksiezyce.some(element => element.promien * 2 <= promien && sprawdzKolizjeObiektowBolean(x, y, promien, ksiezyce))) {
+        this.promien += sprawdzKolizjeObiektowObject(x, y, promien, ksiezyce).promien * 0.5;
+        ksiezyce.splice(ksiezyce.findIndex(element => sprawdzKolizjeKuli(x, element.x, y, element.y, promien, element.promien)), 1);
+    }
+};
+
 /*     #############
        ## PLANETY ##
        #############   */
@@ -207,113 +303,44 @@ let rysujNiebo = function () {
 let Planeta = function (x, y, promien) {
     this.x = x;
     this.y = y;
-    this.promien = promien
-    this.PREDKOSC = 0.25
+    this.promien = promien;
+    this.ks = new Ksiezyc(this);
+    this.kolor = "rgb(" + Math.random() * 255 + "," + Math.random() * 255 + "," + Math.random() * 255 + ")"
 };
-
-let gracz = new Planeta(100, 100, 50);
-planety.push(gracz);
 
 generuj(planety, LICZBAPLANET, Planeta, 50, 75);
 
-Planeta.prototype.przesuwaj = function (timeDiff) {
-    let predkoscRzecz = this.PREDKOSC * timeDiff;
-    if ((wcisniete[KLAWISZE["GORA"]] || wcisniete[KLAWISZE["W"]])
-        && !(this.y < this.promien + predkoscRzecz) && !sprawdzKolizjeObiektow(gracz.x, gracz.y - this.PREDKOSC * timeDiff, gracz.promien)) {
-        this.y -= predkoscRzecz
-    }
-    if ((wcisniete[KLAWISZE["DOL"]] || wcisniete[KLAWISZE["S"]])
-        && !(this.y > BUFORWYS - this.promien - predkoscRzecz) && !sprawdzKolizjeObiektow(gracz.x, gracz.y + this.PREDKOSC * timeDiff, gracz.promien)) {
-        this.y += predkoscRzecz
-    }
-    if ((wcisniete[KLAWISZE["LEWA"]] || wcisniete[KLAWISZE["A"]])
-        && !(this.x < this.promien + predkoscRzecz) && !sprawdzKolizjeObiektow(gracz.x - this.PREDKOSC * timeDiff, gracz.y, gracz.promien)) {
-        this.x -= predkoscRzecz
-    }
-    if ((wcisniete[KLAWISZE["PRAWA"]] || wcisniete[KLAWISZE["D"]])
-        && !(this.x > BUFORSZER - this.promien - predkoscRzecz) && !sprawdzKolizjeObiektow(gracz.x + this.PREDKOSC * timeDiff, gracz.y, gracz.promien)) {
-        this.x += predkoscRzecz
-    };
-};
-
-Planeta.prototype.rysuj = function (numerPlanety) {
+Planeta.prototype.rysuj = function () {
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.promien, 0, Math.PI * 2);
-    ctx.fillStyle = "magenta"; //placeholder
+    ctx.fillStyle = (this.kolor); //placeholder
     ctx.fill();
-    ctx.fillStyle = "yellow"
-    ctx.fillRect(this.x, this.y, 10, 10)//debug
-    if (numerPlanety === 0) {
-        tekst("PLACEHOLDER GRACZ", this.x, this.y, this.promien * 0.20, "white");
-    } else {
-        tekst(`PLACEHOLDER ${numerPlanety}`, this.x, this.y, this.promien * 0.25, "white");
-    }
 };
 
-/*     ##############
-       ## KSIĘŻYCE ##
-       ##############  */
-
-let Ksiezyc = function (x, y, promien) {
-    this.x = x
-    this.y = y
-    this.promien = promien
-};
-
-Ksiezyc.prototype.rysuj = function (numerKs) {
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.promien, 0, Math.PI * 2);
-    ctx.fillStyle = "rgb(255, 0, 200)"
-    ctx.fill();
-    tekst("KSIĘŻYC " + numerKs, this.x, this.y, this.promien * 0.4, "white");
+for (let i = 0; i < planety.length; i++) {
+    ksiezyce.push(planety[i].ks);
 }
-
-generuj(ksiezyce, LICZBAKS, Ksiezyc, 20, 75);
 
 /*     #########
        ## GRA ##
        #########   */
 
 let gra = function (lastTime) {
-    //console.log(reqId)
     let time = Date.now();
     let timeDiff = time - lastTime;
 
     ctx.clearRect(0, 0, SZER, WYS);
-    gracz.przesuwaj(timeDiff);
-    aktWspolrzSw();
     rysujNiebo(gracz.x, gracz.y);
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = 4;
-    let najblizszaPlaneta = {
-        odleglosc: odleglosc(gracz.x, planety[1].x, gracz.y, planety[1].y),
-        x: planety[1].x,
-        y: planety[1].y
-    };
-
+    gracz.przesuwaj(timeDiff);
+    gracz.wchlon(gracz.promien, gracz.x, gracz.y);
+    gracz.rysuj();
+    aktWspolrzSw();
     planety.forEach(planeta => {
-        if (planeta != gracz) {
-            let odl = odleglosc(gracz.x, planeta.x, gracz.y, planeta.y)
-            if (odl < najblizszaPlaneta.odleglosc) {
-                najblizszaPlaneta = {
-                    x: planeta.x,
-                    y: planeta.y,
-                    odleglosc: odl,
-                }
-            }
-        }
-    })
-
-    ctx.beginPath()
-    ctx.moveTo(gracz.x, gracz.y)
-    ctx.lineTo(najblizszaPlaneta.x, najblizszaPlaneta.y)
-    ctx.stroke()
-
-    planety.forEach(planeta => {
-        planeta.rysuj(planety.indexOf(planeta));
+        planeta.rysuj();
     });
     ksiezyce.forEach(ksiezyc => {
-        ksiezyc.rysuj(ksiezyce.indexOf(ksiezyc));
+        ksiezyc.rysuj();
+        ksiezyc.przesuwaj();
     })
 
     if (pauza === false) {
@@ -321,7 +348,7 @@ let gra = function (lastTime) {
             gra(time);
         })
     } else if (pauza === true) { //pauza
-        tekst("PAUZA", CENTERX, CENTERY - 120, 100, "white", true, "black");
+        tekst("PAUZA", centerX, centerY - 120, 100, "white", true, "black");
         $("#wznowGre").show();
         $("#togleFps").show();
         $("#wznowGre").click(function () {
@@ -333,19 +360,22 @@ let gra = function (lastTime) {
         });
     };
     canvasCtx.clearRect(0, 0, SZER, WYS);
-    canvasCtx.drawImage(bufor, worldX, worldY);
+    canvasCtx.drawImage(bufor, worldX, worldY, BUFORSZER * zoom * 0.01, BUFORWYS * zoom * 0.01);
     canvasCtx.fillStyle = "black";
     canvasCtx.strokeStyle = "white";
     canvasCtx.lineWidth = 4;
     canvasCtx.fillRect(SZER - 320, 20, 300, 200);
     canvasCtx.strokeRect(SZER - 320, 20, 300, 200);
     canvasCtx.drawImage(bufor, SZER - 320, 20, 300, 200)
+    canvasCtx.fillStyle = "yellow";
+    canvasCtx.fillRect(centerX, centerY, 15, 15);
     ctx.clearRect(0, 0, BUFORSZER, BUFORWYS);
+    $("#fps").text(fps + " fps");
 };
 
 gra(STARTTIME);
 setInterval(function () {
-    let fps = reqId - stareReqId;
+    fps = reqId - stareReqId;
     stareReqId = reqId;
-    $("#fps").text(fps + " fps");
 }, 1000);
+
