@@ -18,8 +18,13 @@
 - [x] togle licznik fps w menu
 - [x] dokończenie księżycy
 - [x] minimapa
+- [x] księżyce dookoła planet
+- [x] losowe kolory dla planet
+- [x] wchłananie innych rzeczy
+- [x] naprawić zoom
 - [ ] ślizganie po krawędziach (wip)
-- [ ] księżyce dookoła planet (wip)
-- [ ] losowe kolory dla planet
+- [ ] kombinacje klawiszowe do debugowanie, np. speed, debug txt (wip)
+- [ ] księżyce odbiją gracza po zderzeniu(wip);
+- [ ] grawitacja względem większych planet
+- [ ] tekstury gracza
 - [ ] dodać więcej róznych ciał niebieskich
-- [ ] tekstury

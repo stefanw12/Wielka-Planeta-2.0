@@ -11,3 +11,43 @@ let rysujMinimape = function() {
     miniMapX = STARTMINIMAPX + gracz.x * 0.1;
     miniMapY = STARTMINIMAPY + gracz.y * 0.1;
 };
+ctx.strokeStyle = "white";
+ctx.lineWidth = 4;
+let najblizszaPlaneta = {
+   odleglosc: odleglosc(gracz.x, planety[1].x, gracz.y, planety[1].y),
+    x: planety[1].x,
+    y: planety[1].y
+};
+planety.forEach(planeta => {
+    if (planeta != gracz) {
+        let odl = odleglosc(gracz.x, planeta.x, gracz.y, planeta.y)
+        if (odl < najblizszaPlaneta.odleglosc) {
+            najblizszaPlaneta = {
+                x: planeta.x,
+                y: planeta.y,
+                odleglosc: odl,
+            }
+        }
+    }
+})
+
+ctx.beginPath()
+ctx.moveTo(gracz.x, gracz.y)
+ctx.lineTo(najblizszaPlaneta.x, najblizszaPlaneta.y)
+ctx.stroke()
+tekst("KSIĘŻYC " + numerKs, this.x, this.y, this.promien * 0.4, "white");
+ctx.beginPath();
+ctx.strokeStyle = this.kolor
+ctx.arc(this.planeta.x, this.planeta.y, this.odl, this.kat, this.kat - Math.PI / 4, true);
+ctx.stroke();
+ctx.strokeStyle = "white";
+ctx.beginPath();
+ctx.moveTo(this.x, this.y);
+ctx.lineTo(this.planeta.x, this.planeta.y);
+ctx.stroke();
+Gracz.prototype.sprawdzajKolizje = function() {
+        if (sprawdzKolizjeObiektow(this.x, this.y, this.promien, ksiezyce)) {
+            this.x += 5;
+            this.y += 5;
+        }
+};
