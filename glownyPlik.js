@@ -33,6 +33,7 @@ let gwiazdki = [];
 let ksiezyce = [];
 let planety = [];
 let gracze = [];
+let tak = true;
 let obiekty = [planety, ksiezyce, gracze];
 let KLAWISZE = {
     "LEWA": 37,
@@ -45,8 +46,9 @@ let KLAWISZE = {
     "S": 83,
     "D": 68,
     "R": 82,
+    "P": 80,
 };
-let wcisniete = { 37: false, 38: false, 39: false, 40: false, 87: false, 65: false, 83: false, 68: false };
+let wcisniete = { 37: false, 38: false, 39: false, 40: false, 87: false, 65: false, 83: false, 68: false, 80: false };
 $("#wznowGre").hide();
 $("#wznowGre").css("top", `${centerY - 100}px`);
 $("#wznowGre").css("left", `${centerX - 250}px`);
@@ -273,12 +275,23 @@ Gracz.prototype.przesuwaj = function (timeDiff) {
 };
 
 Gracz.prototype.rysuj = function () {
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.promien, 0, Math.PI * 2);
-    ctx.fillStyle = "magenta"; //placeholder
-    ctx.fill();
-    ctx.fillStyle = "yellow"
-    tekst("PLACEHOLDER GRACZ", this.x, this.y, this.promien * 0.20, "white");
+    let iloscOkregow = this.promien / 12;
+    for (i = 0; i < iloscOkregow; i++) {
+        let promienOkregu = this.promien - i * i * 7;
+        if (promienOkregu <= 0) {
+            promienOkregu = 1;
+        }
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, promienOkregu, 0, Math.PI * 2);
+        if (i % 2 === 0 ) {
+            ctx.fillStyle = "brown";
+        } else {
+            ctx.fillStyle = "orange"
+        }
+
+        ctx.fill();
+    }
+    //tekst("PLACEHOLDER GRACZ", this.x, this.y, this.promien * 0.20, "white");
 };
 
 let obsługaKolizji = function (korektaX, korektaY, x, y, promien) {
@@ -343,6 +356,11 @@ let gra = function (lastTime) {
         ksiezyc.przesuwaj();
     })
 
+    if (wcisniete[KLAWISZE["S"]] == true && wcisniete[KLAWISZE["P"]] == true && wcisniete[KLAWISZE["D"]] == true) {
+        gracz.PREDKOSC = prompt("podaj nową prędkość(bazowa to 0.25)");
+        Object.keys(wcisniete).forEach(element => wcisniete[element] = false);
+    }
+
     if (pauza === false) {
         reqId = window.requestAnimationFrame(function () {
             gra(time);
@@ -367,8 +385,6 @@ let gra = function (lastTime) {
     canvasCtx.fillRect(SZER - 320, 20, 300, 200);
     canvasCtx.strokeRect(SZER - 320, 20, 300, 200);
     canvasCtx.drawImage(bufor, SZER - 320, 20, 300, 200)
-    canvasCtx.fillStyle = "yellow";
-    canvasCtx.fillRect(centerX, centerY, 15, 15);
     ctx.clearRect(0, 0, BUFORSZER, BUFORWYS);
     $("#fps").text(fps + " fps");
 };

@@ -22,9 +22,9 @@
 - [x] losowe kolory dla planet
 - [x] wchłananie innych rzeczy
 - [x] naprawić zoom
+- [x] tekstury gracza
 - [ ] ślizganie po krawędziach (wip)
 - [ ] kombinacje klawiszowe do debugowanie, np. speed, debug txt (wip)
 - [ ] księżyce odbiją gracza po zderzeniu(wip);
 - [ ] grawitacja względem większych planet
-- [ ] tekstury gracza
 - [ ] dodać więcej róznych ciał niebieskich
