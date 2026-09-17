@@ -80,7 +80,7 @@ $("#togleFps").click(function () {
 });
 $("#fps").hide();
 $("debugMode").hide();
-$("#debugMode").css("top", `${centerY - 100}px`);
+$("#debugMode").css("top", `${centerY + 100}px`);
 $("#debugMode").css("left", `${centerX - 250}px`);
 $("#debugMode").hover(function () {
     $("#debugMode a").css("background-color", "white");
