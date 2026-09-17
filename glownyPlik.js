@@ -26,6 +26,8 @@ let worldY = 0;
 let kierunek = 0;
 let stareReqId = 0;
 let fps = 60;
+let kolor = 0;
+let debugMode = false;
 let zoom = 100;
 let centerX = SZER / 2
 let centerY = WYS / 2
@@ -33,7 +35,6 @@ let gwiazdki = [];
 let ksiezyce = [];
 let planety = [];
 let gracze = [];
-let tak = true;
 let obiekty = [planety, ksiezyce, gracze];
 let KLAWISZE = {
     "LEWA": 37,
@@ -79,6 +80,19 @@ $("#togleFps").click(function () {
     }
 });
 $("#fps").hide();
+$("#debugMode").hide();
+$("#debugMode").css("top", `${centerY + 100}px`);
+$("#debugMode").css("left", `${centerX - 250}px`);
+$("#debugMode").hover(function () {
+    $("#debugMode a").css("background-color", "white");
+    $("#debugMode a").css("color", "black");
+}, function () {
+    $("#debugMode a").css("color", "white");
+    $("#debugMode a").css("background", "black");
+});
+$("#debugMode").click(function () {
+    if (debugMode) { debugMode = false } else { debugMode = true }
+});
 
 $(document).keydown(function (zdarzenie) {
     if (zdarzenie.keyCode in wcisniete && !pauza) {
@@ -224,11 +238,18 @@ let Ksiezyc = function (planeta) {
     }
 };
 
-Ksiezyc.prototype.rysuj = function () {
+Ksiezyc.prototype.rysuj = function (numerKs) {
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.promien, 0, Math.PI * 2);
-    ctx.fillStyle = this.kolor;
-    ctx.fill();
+    if (debugMode) {
+        ctx.fillStyle = "magenta";
+        ctx.fill();
+        tekst("KSIĘŻYC " + numerKs, this.x, this.y, this.promien * 0.4, "white");
+    } else {
+        ctx.fillStyle = this.kolor;
+        ctx.fill();
+    }
+
 }
 
 Ksiezyc.prototype.przesuwaj = function () {
@@ -276,22 +297,28 @@ Gracz.prototype.przesuwaj = function (timeDiff) {
 
 Gracz.prototype.rysuj = function () {
     let iloscOkregow = this.promien / 12;
-    for (i = 0; i < iloscOkregow; i++) {
-        let promienOkregu = this.promien - i * i * 7;
-        if (promienOkregu <= 0) {
-            promienOkregu = 1;
+    if (!debugMode) {
+        for (i = 0; i < iloscOkregow; i++) {
+            let promienOkregu = this.promien - i * i * 7;
+            if (promienOkregu <= 0) {
+                promienOkregu = 1;
+            }
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, promienOkregu, 0, Math.PI * 2);
+            if (i % 2 === Math.floor(kolor) % 2) {
+                ctx.fillStyle = "brown";
+            } else {
+                ctx.fillStyle = "orange"
+            }
+            ctx.fill();
         }
+    } else {
         ctx.beginPath();
-        ctx.arc(this.x, this.y, promienOkregu, 0, Math.PI * 2);
-        if (i % 2 === 0 ) {
-            ctx.fillStyle = "brown";
-        } else {
-            ctx.fillStyle = "orange"
-        }
-
+        ctx.arc(this.x, this.y, this.promien, 0, Math.PI * 2);
+        ctx.fillStyle = "magenta";
         ctx.fill();
+        tekst("PLACEHOLDER GRACZ", this.x, this.y, this.promien * 0.20, "white");
     }
-    //tekst("PLACEHOLDER GRACZ", this.x, this.y, this.promien * 0.20, "white");
 };
 
 let obsługaKolizji = function (korektaX, korektaY, x, y, promien) {
@@ -318,16 +345,23 @@ let Planeta = function (x, y, promien) {
     this.y = y;
     this.promien = promien;
     this.ks = new Ksiezyc(this);
-    this.kolor = "rgb(" + Math.random() * 255 + "," + Math.random() * 255 + "," + Math.random() * 255 + ")"
+    this.kolor = "rgba(" + Math.random() * 255 + "," + Math.random() * 255 + "," + Math.random() * 255 + ")"
 };
 
 generuj(planety, LICZBAPLANET, Planeta, 50, 75);
 
-Planeta.prototype.rysuj = function () {
+Planeta.prototype.rysuj = function (numerPl) {
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.promien, 0, Math.PI * 2);
-    ctx.fillStyle = (this.kolor); //placeholder
+    if (debugMode) {
+        ctx.fillStyle = "magenta";
+    } else {
+        ctx.fillStyle = this.kolor;
+    }
     ctx.fill();
+    if (debugMode) {
+        tekst("PLANETA " + numerPl, this.x, this.y, this.promien * 0.4, "white");
+    }
 };
 
 for (let i = 0; i < planety.length; i++) {
@@ -341,6 +375,9 @@ for (let i = 0; i < planety.length; i++) {
 let gra = function (lastTime) {
     let time = Date.now();
     let timeDiff = time - lastTime;
+    if (gracz.promien > 75) {
+        kolor += 0.02;
+    }
 
     ctx.clearRect(0, 0, SZER, WYS);
     rysujNiebo(gracz.x, gracz.y);
@@ -349,10 +386,10 @@ let gra = function (lastTime) {
     gracz.rysuj();
     aktWspolrzSw();
     planety.forEach(planeta => {
-        planeta.rysuj();
+        planeta.rysuj(planety.indexOf(planeta));
     });
     ksiezyce.forEach(ksiezyc => {
-        ksiezyc.rysuj();
+        ksiezyc.rysuj(ksiezyce.indexOf(ksiezyc));
         ksiezyc.przesuwaj();
     })
 
@@ -369,12 +406,14 @@ let gra = function (lastTime) {
         tekst("PAUZA", centerX, centerY - 120, 100, "white", true, "black");
         $("#wznowGre").show();
         $("#togleFps").show();
+        $("#debugMode").show();
         $("#wznowGre").click(function () {
             pauza = false;
             window.cancelAnimationFrame(reqId);
             gra(time);
             $("#wznowGre").hide();
             $("#togleFps").hide();
+            $("#debugMode").hide();
         });
     };
     canvasCtx.clearRect(0, 0, SZER, WYS);
@@ -394,4 +433,3 @@ setInterval(function () {
     fps = reqId - stareReqId;
     stareReqId = reqId;
 }, 1000);
-

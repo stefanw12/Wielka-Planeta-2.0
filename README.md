@@ -23,8 +23,10 @@
 - [x] wchłananie innych rzeczy
 - [x] naprawić zoom
 - [x] tekstury gracza
+- [x] kombinacje klawiszowe do debugowanie, np. speed, debug txt
 - [ ] ślizganie po krawędziach (wip)
-- [ ] kombinacje klawiszowe do debugowanie, np. speed, debug txt (wip)
 - [ ] księżyce odbiją gracza po zderzeniu(wip);
+- [ ] naprawienie buga, który zmniejszna napis pauza z zooomem
+- [ ] zmiana zoomu z powiększaniem planety
 - [ ] grawitacja względem większych planet
 - [ ] dodać więcej róznych ciał niebieskich
