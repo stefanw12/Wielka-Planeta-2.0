@@ -26,6 +26,7 @@ let worldY = 0;
 let kierunek = 0;
 let stareReqId = 0;
 let fps = 60;
+let kolor = 0;
 let zoom = 100;
 let centerX = SZER / 2
 let centerY = WYS / 2
@@ -33,7 +34,6 @@ let gwiazdki = [];
 let ksiezyce = [];
 let planety = [];
 let gracze = [];
-let tak = true;
 let obiekty = [planety, ksiezyce, gracze];
 let KLAWISZE = {
     "LEWA": 37,
@@ -79,6 +79,7 @@ $("#togleFps").click(function () {
     }
 });
 $("#fps").hide();
+$("debugMode").hide();
 
 $(document).keydown(function (zdarzenie) {
     if (zdarzenie.keyCode in wcisniete && !pauza) {
@@ -283,7 +284,7 @@ Gracz.prototype.rysuj = function () {
         }
         ctx.beginPath();
         ctx.arc(this.x, this.y, promienOkregu, 0, Math.PI * 2);
-        if (i % 2 === 0 ) {
+        if (i % 2 === Mathh.floor(kolor) % 2) {
             ctx.fillStyle = "brown";
         } else {
             ctx.fillStyle = "orange"
@@ -318,7 +319,7 @@ let Planeta = function (x, y, promien) {
     this.y = y;
     this.promien = promien;
     this.ks = new Ksiezyc(this);
-    this.kolor = "rgb(" + Math.random() * 255 + "," + Math.random() * 255 + "," + Math.random() * 255 + ")"
+    this.kolor = "rgba(" + Math.random() * 255 + "," + Math.random() * 255 + "," + Math.random() * 255 + ")"
 };
 
 generuj(planety, LICZBAPLANET, Planeta, 50, 75);
@@ -339,6 +340,7 @@ for (let i = 0; i < planety.length; i++) {
        #########   */
 
 let gra = function (lastTime) {
+    kolor += 0.5;
     let time = Date.now();
     let timeDiff = time - lastTime;
 
