@@ -79,7 +79,7 @@ $("#togleFps").click(function () {
     }
 });
 $("#fps").hide();
-$("debugMode").hide();
+$("#debugMode").hide();
 $("#debugMode").css("top", `${centerY + 100}px`);
 $("#debugMode").css("left", `${centerX - 250}px`);
 $("#debugMode").hover(function () {
@@ -349,7 +349,7 @@ for (let i = 0; i < planety.length; i++) {
        #########   */
 
 let gra = function (lastTime) {
-    kolor += 0.2;
+    kolor += 0.05;
     let time = Date.now();
     let timeDiff = time - lastTime;
 
