@@ -80,6 +80,15 @@ $("#togleFps").click(function () {
 });
 $("#fps").hide();
 $("debugMode").hide();
+$("#debugMode").css("top", `${centerY - 100}px`);
+$("#debugMode").css("left", `${centerX - 250}px`);
+$("#debugMode").hover(function () {
+    $("#debugMode a").css("background-color", "white");
+    $("#debugMode a").css("color", "black");
+}, function () {
+    $("#debugMode a").css("color", "white");
+    $("#debugMode a").css("background", "black");
+});
 
 $(document).keydown(function (zdarzenie) {
     if (zdarzenie.keyCode in wcisniete && !pauza) {
@@ -340,7 +349,7 @@ for (let i = 0; i < planety.length; i++) {
        #########   */
 
 let gra = function (lastTime) {
-    kolor += 0.05;
+    kolor += 0.2;
     let time = Date.now();
     let timeDiff = time - lastTime;
 
@@ -371,6 +380,7 @@ let gra = function (lastTime) {
         tekst("PAUZA", centerX, centerY - 120, 100, "white", true, "black");
         $("#wznowGre").show();
         $("#togleFps").show();
+        $("#debugMode").show();
         $("#wznowGre").click(function () {
             pauza = false;
             window.cancelAnimationFrame(reqId);
