@@ -284,7 +284,7 @@ Gracz.prototype.rysuj = function () {
         }
         ctx.beginPath();
         ctx.arc(this.x, this.y, promienOkregu, 0, Math.PI * 2);
-        if (i % 2 === Mathh.floor(kolor) % 2) {
+        if (i % 2 === Math.floor(kolor) % 2) {
             ctx.fillStyle = "brown";
         } else {
             ctx.fillStyle = "orange"
