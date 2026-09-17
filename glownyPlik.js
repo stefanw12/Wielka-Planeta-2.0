@@ -387,6 +387,7 @@ let gra = function (lastTime) {
             gra(time);
             $("#wznowGre").hide();
             $("#togleFps").hide();
+            $("#debugMode").hide();
         });
     };
     canvasCtx.clearRect(0, 0, SZER, WYS);
