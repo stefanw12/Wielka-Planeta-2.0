@@ -340,7 +340,7 @@ for (let i = 0; i < planety.length; i++) {
        #########   */
 
 let gra = function (lastTime) {
-    kolor += 0.5;
+    kolor += 0.005;
     let time = Date.now();
     let timeDiff = time - lastTime;
 
