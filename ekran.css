@@ -27,7 +27,7 @@ body {
     background-color: black;
 }
 
-#wznowGre, #togleFps {
+#wznowGre, #togleFps, #debugMode {
     position: absolute;
     font-size: 75px;
 }
